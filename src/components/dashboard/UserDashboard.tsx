@@ -760,7 +760,7 @@ const UserDashboard = () => {
     switch (key) {
       case "leads":
         return (
-          <Card className="h-full hover:shadow-lg transition-shadow animate-fade-in">
+          <Card className="h-full hover:shadow-lg transition-shadow animate-fade-in overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between py-2 px-3">
               <CardTitle className="text-sm font-medium">My Leads</CardTitle>
               <FileText className="w-4 h-4 text-blue-600" />
