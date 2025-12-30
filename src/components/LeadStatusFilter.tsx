@@ -1,4 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface LeadStatusFilterProps {
   value: string;
@@ -6,10 +8,24 @@ interface LeadStatusFilterProps {
 }
 
 export const LeadStatusFilter = ({ value, onValueChange }: LeadStatusFilterProps) => {
+  const isActive = value !== "all";
+  
   return (
-    <Select value={value || "New"} onValueChange={onValueChange}>
-      <SelectTrigger className="w-40">
-        <SelectValue placeholder="New" />
+    <Select value={value || "all"} onValueChange={onValueChange}>
+      <SelectTrigger 
+        className={cn(
+          "w-44",
+          isActive && "border-primary ring-1 ring-primary/20"
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <SelectValue placeholder="All Statuses" />
+          {isActive && (
+            <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+              1
+            </Badge>
+          )}
+        </div>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All Statuses</SelectItem>
