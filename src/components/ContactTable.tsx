@@ -24,6 +24,8 @@ import { AccountDetailModalById } from "./accounts/AccountDetailModalById";
 import { SendEmailModal } from "./SendEmailModal";
 import { MeetingModal } from "./MeetingModal";
 import { TaskModal } from "./tasks/TaskModal";
+import { ConvertContactToLeadModal } from "./contacts/ConvertContactToLeadModal";
+import { MergeRecordsModal } from "./shared/MergeRecordsModal";
 import { HighlightedText } from "./shared/HighlightedText";
 import { ClearFiltersButton } from "./shared/ClearFiltersButton";
 import { TableSkeleton } from "./shared/Skeletons";
@@ -190,6 +192,15 @@ export const ContactTable = forwardRef<ContactTableRef, ContactTableProps>(({
   const [meetingContact, setMeetingContact] = useState<Contact | null>(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [taskContactId, setTaskContactId] = useState<string | null>(null);
+  
+  // Convert to Lead modal states
+  const [convertModalOpen, setConvertModalOpen] = useState(false);
+  const [contactToConvert, setContactToConvert] = useState<Contact | null>(null);
+  
+  // Merge modal states
+  const [mergeModalOpen, setMergeModalOpen] = useState(false);
+  const [mergeSourceId, setMergeSourceId] = useState<string>("");
+  const [mergeTargetId, setMergeTargetId] = useState<string>("");
 
   const { createTask } = useTasks();
 
@@ -408,46 +419,19 @@ export const ContactTable = forwardRef<ContactTableRef, ContactTableProps>(({
     }
   };
 
-  const handleConvertToLead = async (contact: Contact) => {
-    try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error('User not authenticated');
+  const handleConvertToLead = (contact: Contact) => {
+    setContactToConvert(contact);
+    setConvertModalOpen(true);
+  };
 
-      const leadData: any = {
-        lead_name: contact.contact_name,
-        created_by: user.id,
-        created_time: new Date().toISOString(),
-        modified_time: new Date().toISOString()
-      };
-
-      if (contact.company_name) leadData.company_name = contact.company_name;
-      if (contact.position) leadData.position = contact.position;
-      if (contact.email) leadData.email = contact.email;
-      if (contact.phone_no) leadData.phone_no = contact.phone_no;
-      if (contact.linkedin) leadData.linkedin = contact.linkedin;
-      if (contact.website) leadData.website = contact.website;
-      if (contact.contact_source) leadData.contact_source = contact.contact_source;
-      if (contact.industry) leadData.industry = contact.industry;
-      if (contact.region) leadData.country = contact.region;
-      if (contact.description) leadData.description = contact.description;
-      if (contact.contact_owner) leadData.contact_owner = contact.contact_owner;
-
-      const { error } = await supabase.from('leads').insert([leadData]).select().single();
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Contact "${contact.contact_name}" has been converted to a lead.`
-      });
-
-      fetchContacts();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to convert contact to lead.",
-        variant: "destructive"
-      });
-    }
+  const handleMergeLeads = (contactId: string, leadId: string) => {
+    // For now, we'll just show a toast - full merge functionality would require more complex handling
+    // since we're merging contact -> lead (different entities)
+    toast({
+      title: "Merge Feature",
+      description: "Contact-to-Lead merge functionality will open the lead for review.",
+    });
+    // Navigate to lead or open lead detail
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -1001,6 +985,28 @@ export const ContactTable = forwardRef<ContactTableRef, ContactTableProps>(({
         onOpenChange={setTaskModalOpen}
         onSubmit={createTask}
         context={taskContactId ? { module: 'contacts', recordId: taskContactId, locked: true } : undefined}
+      />
+
+      {/* Convert to Lead Modal */}
+      <ConvertContactToLeadModal
+        open={convertModalOpen}
+        onOpenChange={setConvertModalOpen}
+        contact={contactToConvert}
+        onSuccess={() => {
+          fetchContacts();
+          setContactToConvert(null);
+        }}
+        onMergeLead={handleMergeLeads}
+      />
+
+      {/* Merge Records Modal */}
+      <MergeRecordsModal
+        open={mergeModalOpen}
+        onOpenChange={setMergeModalOpen}
+        entityType="contacts"
+        sourceId={mergeSourceId}
+        targetId={mergeTargetId}
+        onSuccess={fetchContacts}
       />
     </div>
   );

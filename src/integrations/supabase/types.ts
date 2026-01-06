@@ -1213,6 +1213,7 @@ export type Database = {
           company_name: string | null
           contact_owner: string | null
           contact_source: string | null
+          converted_from_contact_id: string | null
           country: string | null
           created_by: string | null
           created_time: string | null
@@ -1234,6 +1235,7 @@ export type Database = {
           company_name?: string | null
           contact_owner?: string | null
           contact_source?: string | null
+          converted_from_contact_id?: string | null
           country?: string | null
           created_by?: string | null
           created_time?: string | null
@@ -1255,6 +1257,7 @@ export type Database = {
           company_name?: string | null
           contact_owner?: string | null
           contact_source?: string | null
+          converted_from_contact_id?: string | null
           country?: string | null
           created_by?: string | null
           created_time?: string | null
@@ -1277,6 +1280,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_converted_from_contact_id_fkey"
+            columns: ["converted_from_contact_id"]
+            isOneToOne: true
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
