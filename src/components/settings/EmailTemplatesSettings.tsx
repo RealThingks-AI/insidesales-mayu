@@ -16,6 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { TablePagination } from "@/components/shared/TablePagination";
 import TemplatePreviewModal from "./email/TemplatePreviewModal";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
+
 interface EmailTemplate {
   id: string;
   name: string;
@@ -25,14 +26,12 @@ interface EmailTemplate {
   created_at: string;
   updated_at: string;
 }
+
 const ITEMS_PER_PAGE = 10;
+
 const EmailTemplatesSettings = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -49,15 +48,15 @@ const EmailTemplatesSettings = () => {
     subject: "",
     body: ""
   });
+
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const {
-        data,
-        error
-      } = await supabase.from('email_templates').select('*').order('created_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('email_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
       setTemplates(data || []);
     } catch (error) {
@@ -65,12 +64,13 @@ const EmailTemplatesSettings = () => {
       toast({
         title: "Error",
         description: "Failed to fetch email templates",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchTemplates();
   }, []);
@@ -79,8 +79,12 @@ const EmailTemplatesSettings = () => {
   const filteredTemplates = useMemo(() => {
     if (!searchQuery.trim()) return templates;
     const query = searchQuery.toLowerCase();
-    return templates.filter(t => t.name.toLowerCase().includes(query) || t.subject.toLowerCase().includes(query));
+    return templates.filter(t => 
+      t.name.toLowerCase().includes(query) || 
+      t.subject.toLowerCase().includes(query)
+    );
   }, [templates, searchQuery]);
+
   const totalPages = Math.ceil(filteredTemplates.length / ITEMS_PER_PAGE);
   const paginatedTemplates = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -91,11 +95,13 @@ const EmailTemplatesSettings = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
+
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
     }
   }, [filteredTemplates, totalPages, currentPage]);
+
   const handleOpenModal = (template?: EmailTemplate) => {
     if (template) {
       setEditingTemplate(template);
@@ -106,24 +112,23 @@ const EmailTemplatesSettings = () => {
       });
     } else {
       setEditingTemplate(null);
-      setFormData({
-        name: "",
-        subject: "",
-        body: ""
-      });
+      setFormData({ name: "", subject: "", body: "" });
     }
     setShowModal(true);
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.name || !formData.subject || !formData.body) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
+
     setSaving(true);
     try {
       const templateData = {
@@ -132,25 +137,22 @@ const EmailTemplatesSettings = () => {
         body: formData.body,
         created_by: user?.id
       };
+
       if (editingTemplate) {
-        const {
-          error
-        } = await supabase.from('email_templates').update(templateData).eq('id', editingTemplate.id);
+        const { error } = await supabase
+          .from('email_templates')
+          .update(templateData)
+          .eq('id', editingTemplate.id);
         if (error) throw error;
-        toast({
-          title: "Success",
-          description: "Template updated successfully"
-        });
+        toast({ title: "Success", description: "Template updated successfully" });
       } else {
-        const {
-          error
-        } = await supabase.from('email_templates').insert([templateData]);
+        const { error } = await supabase
+          .from('email_templates')
+          .insert([templateData]);
         if (error) throw error;
-        toast({
-          title: "Success",
-          description: "Template created successfully"
-        });
+        toast({ title: "Success", description: "Template created successfully" });
       }
+
       setShowModal(false);
       fetchTemplates();
     } catch (error: any) {
@@ -158,36 +160,38 @@ const EmailTemplatesSettings = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to save template",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
     }
   };
+
   const handleDelete = async (id: string) => {
     try {
-      const {
-        error
-      } = await supabase.from('email_templates').delete().eq('id', id);
+      const { error } = await supabase
+        .from('email_templates')
+        .delete()
+        .eq('id', id);
+
       if (error) throw error;
 
       // Immediately remove from local state for instant UI update
       setTemplates(prev => prev.filter(t => t.id !== id));
       setShowDeleteDialog(false);
       setTemplateToDelete(null);
-      toast({
-        title: "Success",
-        description: "Template deleted successfully"
-      });
+      
+      toast({ title: "Success", description: "Template deleted successfully" });
     } catch (error) {
       console.error('Delete error:', error);
       toast({
         title: "Error",
         description: "Failed to delete template",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
+
   const handleDuplicate = async (template: EmailTemplate) => {
     setSaving(true);
     try {
@@ -197,48 +201,47 @@ const EmailTemplatesSettings = () => {
         body: template.body,
         created_by: user?.id
       };
-      const {
-        error
-      } = await supabase.from('email_templates').insert([duplicateData]);
+
+      const { error } = await supabase
+        .from('email_templates')
+        .insert([duplicateData]);
+
       if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Template duplicated successfully"
-      });
+
+      toast({ title: "Success", description: "Template duplicated successfully" });
       fetchTemplates();
     } catch (error: any) {
       console.error('Duplicate error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to duplicate template",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
     }
   };
-  const availableVariables = [{
-    variable: "{{contact_name}}",
-    description: "Contact's full name"
-  }, {
-    variable: "{{company_name}}",
-    description: "Company name"
-  }, {
-    variable: "{{position}}",
-    description: "Contact's position"
-  }, {
-    variable: "{{email}}",
-    description: "Contact's email"
-  }];
+
+  const availableVariables = [
+    { variable: "{{contact_name}}", description: "Contact's full name" },
+    { variable: "{{company_name}}", description: "Company name" },
+    { variable: "{{position}}", description: "Contact's position" },
+    { variable: "{{email}}", description: "Contact's email" },
+  ];
+
   if (loading) {
-    return <div className="flex items-center justify-center h-64">
+    return (
+      <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading templates...</p>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -258,7 +261,12 @@ const EmailTemplatesSettings = () => {
           {/* Search Bar */}
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            
+            <Input
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
           </div>
 
           <Table>
@@ -272,11 +280,15 @@ const EmailTemplatesSettings = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedTemplates.length === 0 ? <TableRow>
+              {paginatedTemplates.length === 0 ? (
+                <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     {searchQuery ? "No templates match your search." : "No email templates yet. Create your first template to get started."}
                   </TableCell>
-                </TableRow> : paginatedTemplates.map(template => <TableRow key={template.id}>
+                </TableRow>
+              ) : (
+                paginatedTemplates.map((template) => (
+                  <TableRow key={template.id}>
                     <TableCell className="font-medium">{template.name}</TableCell>
                     <TableCell>{template.subject}</TableCell>
                     <TableCell>{format(new Date(template.created_at), 'dd/MM/yyyy')}</TableCell>
@@ -284,10 +296,15 @@ const EmailTemplatesSettings = () => {
                       <div className="flex items-center gap-1">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => {
-                        setPreviewTemplate(template);
-                        setShowPreviewModal(true);
-                      }} aria-label={`Preview ${template.name} template`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setPreviewTemplate(template);
+                                setShowPreviewModal(true);
+                              }}
+                              aria-label={`Preview ${template.name} template`}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
@@ -295,7 +312,13 @@ const EmailTemplatesSettings = () => {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleDuplicate(template)} disabled={saving} aria-label={`Duplicate ${template.name} template`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDuplicate(template)}
+                              disabled={saving}
+                              aria-label={`Duplicate ${template.name} template`}
+                            >
                               <Copy className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
@@ -303,7 +326,12 @@ const EmailTemplatesSettings = () => {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleOpenModal(template)} aria-label={`Edit ${template.name} template`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenModal(template)}
+                              aria-label={`Edit ${template.name} template`}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
@@ -311,10 +339,15 @@ const EmailTemplatesSettings = () => {
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => {
-                        setTemplateToDelete(template.id);
-                        setShowDeleteDialog(true);
-                      }} aria-label={`Delete ${template.name} template`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setTemplateToDelete(template.id);
+                                setShowDeleteDialog(true);
+                              }}
+                              aria-label={`Delete ${template.name} template`}
+                            >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </TooltipTrigger>
@@ -322,12 +355,23 @@ const EmailTemplatesSettings = () => {
                         </Tooltip>
                       </div>
                     </TableCell>
-                  </TableRow>)}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
 
           {/* Pagination */}
-          {filteredTemplates.length > ITEMS_PER_PAGE && <TablePagination currentPage={currentPage} totalPages={totalPages} itemsPerPage={ITEMS_PER_PAGE} totalItems={filteredTemplates.length} onPageChange={setCurrentPage} entityName="templates" />}
+          {filteredTemplates.length > ITEMS_PER_PAGE && (
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={ITEMS_PER_PAGE}
+              totalItems={filteredTemplates.length}
+              onPageChange={setCurrentPage}
+              entityName="templates"
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -341,35 +385,47 @@ const EmailTemplatesSettings = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Template Name *</Label>
-              <Input id="name" value={formData.name} onChange={e => setFormData(prev => ({
-              ...prev,
-              name: e.target.value
-            }))} placeholder="e.g., Welcome Email, Follow-up" className="max-w-sm" required />
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Welcome Email, Follow-up"
+                className="max-w-sm"
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="subject">Email Subject *</Label>
-              <Input id="subject" value={formData.subject} onChange={e => setFormData(prev => ({
-              ...prev,
-              subject: e.target.value
-            }))} placeholder="e.g., Hello {{contact_name}}, following up..." required />
+              <Input
+                id="subject"
+                value={formData.subject}
+                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                placeholder="e.g., Hello {{contact_name}}, following up..."
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="body">Email Body *</Label>
-              <RichTextEditor value={formData.body} onChange={value => setFormData(prev => ({
-              ...prev,
-              body: value
-            }))} placeholder="Write your email content here. Use variables like {{contact_name}} for personalization." />
+              <RichTextEditor
+                value={formData.body}
+                onChange={(value) => setFormData(prev => ({ ...prev, body: value }))}
+                placeholder="Write your email content here. Use variables like {{contact_name}} for personalization."
+              />
               {/* Variable helper in modal */}
               <div className="flex flex-wrap gap-2 pt-2">
                 <span className="text-xs text-muted-foreground">Insert variable:</span>
-                {availableVariables.map(v => <Badge key={v.variable} variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs" onClick={() => setFormData(prev => ({
-                ...prev,
-                body: prev.body + v.variable
-              }))}>
+                {availableVariables.map((v) => (
+                  <Badge 
+                    key={v.variable} 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
+                    onClick={() => setFormData(prev => ({ ...prev, body: prev.body + v.variable }))}
+                  >
                     {v.variable}
-                  </Badge>)}
+                  </Badge>
+                ))}
               </div>
             </div>
 
@@ -396,12 +452,14 @@ const EmailTemplatesSettings = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-            if (templateToDelete) {
-              handleDelete(templateToDelete);
-              setTemplateToDelete(null);
-            }
-          }}>
+            <AlertDialogAction
+              onClick={() => {
+                if (templateToDelete) {
+                  handleDelete(templateToDelete);
+                  setTemplateToDelete(null);
+                }
+              }}
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -409,7 +467,13 @@ const EmailTemplatesSettings = () => {
       </AlertDialog>
 
       {/* Template Preview Modal */}
-      <TemplatePreviewModal open={showPreviewModal} onOpenChange={setShowPreviewModal} template={previewTemplate} />
-    </div>;
+      <TemplatePreviewModal
+        open={showPreviewModal}
+        onOpenChange={setShowPreviewModal}
+        template={previewTemplate}
+      />
+    </div>
+  );
 };
+
 export default EmailTemplatesSettings;
